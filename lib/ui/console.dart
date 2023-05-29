@@ -53,14 +53,13 @@ class _ConsoleState extends State<Console> {
   @override
   void initState() {
     super.initState();
-
     widget.controller?._state = this;
   }
 
   @override
   void dispose() {
-    super.dispose();
     _scrollController.dispose();
+    super.dispose();
   }
 
   @override

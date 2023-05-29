@@ -21,8 +21,12 @@ mixin AdbDevices on AdbCommand {
     return result;
   }
 
-  Future<String> startAdb() async {
-    return command("adb start-server");
+  Future<String> startAdb({String? port}) async {
+    if (port != null && port.isNotEmpty) {
+      return command("adb -P $port start-server");
+    } else {
+      return command("adb start-server");
+    }
   }
 
   Future<String> stopAdb() async {

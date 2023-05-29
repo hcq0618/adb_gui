@@ -1,6 +1,7 @@
 import 'package:adb_gui/commands/adb.dart';
 import 'package:adb_gui/ui/console.dart';
 import 'package:adb_gui/ui/refresh_button.dart';
+import 'package:adb_gui/ui/value_command_field.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
@@ -139,13 +140,15 @@ class _HomePageState extends State<HomePage> {
               _consoleController.outputConsole(output);
             }),
         Padding(
-          padding: const EdgeInsets.only(left: 10),
-          child: OutlinedButton(
-              child: const Text("Start Adb"),
-              onPressed: () async {
-                final output = await widget._adb.startAdb();
-                _consoleController.outputConsole(output);
-              }),
+          padding: const EdgeInsets.only(left: 20),
+          child: ValueCommandField(
+            hint: "Port",
+            buttonText: "Start Adb",
+            onPressed: (String text) async {
+              final output = await widget._adb.startAdb(port: text);
+              _consoleController.outputConsole(output);
+            },
+          ),
         ),
         Padding(
           padding: const EdgeInsets.only(left: 10),
