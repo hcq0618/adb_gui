@@ -57,17 +57,16 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String _selectedDevice = "";
   final ConsoleController _consoleController = ConsoleController();
 
   _updateSelectedDevice() {
-    if (_selectedDevice.isEmpty) {
+    if (widget._adb.selectedDevice.isEmpty) {
       if (widget._deviceItems.isNotEmpty) {
-        _selectedDevice = widget._deviceItems[0].value ?? "";
+        widget._adb.selectedDevice = widget._deviceItems[0].value ?? "";
       }
     } else {
       if (widget._deviceItems.isEmpty) {
-        _selectedDevice = "";
+        widget._adb.selectedDevice = "";
       }
     }
   }
@@ -106,11 +105,11 @@ class _HomePageState extends State<HomePage> {
   Widget _buildDeviceSelector() {
     return Row(children: [
       DropdownButton<String>(
-          value: _selectedDevice,
+          value: widget._adb.selectedDevice,
           hint: const Text('Devices'),
           items: widget._deviceItems,
           onChanged: (String? device) {
-            _selectedDevice = device ?? "";
+            widget._adb.selectedDevice = device ?? "";
           }),
       RefreshButton(onPressed: () {
         setState(() {
