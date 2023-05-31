@@ -4,7 +4,7 @@ class AdbCommand {
   final Shell shell = Shell();
   String selectedDevice = "";
 
-  String _selectedDeviceParameter() {
+  String selectedDeviceParameter() {
     if (selectedDevice.isEmpty) {
       return "";
     } else {
@@ -13,7 +13,19 @@ class AdbCommand {
   }
 
   Future<String> command(String command) async {
-    final output = await shell.run(command);
-    return "\$$command\n${output.outText}";
+    try {
+      final output = await shell.run(command);
+      final String outputText;
+
+      if (output.errText.isNotEmpty) {
+        outputText = output.errText;
+      } else {
+        outputText = output.outText;
+      }
+
+      return "\$$command\n$outputText";
+    } catch (e) {
+      return "\$$command\n$e";
+    }
   }
 }

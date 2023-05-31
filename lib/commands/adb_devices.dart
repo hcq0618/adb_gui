@@ -21,8 +21,8 @@ mixin AdbDevices on AdbCommand {
     return result;
   }
 
-  Future<String> startAdb({String? port}) async {
-    if (port != null && port.isNotEmpty) {
+  Future<String> startAdb({String port = ''}) async {
+    if (port.isNotEmpty) {
       return command("adb -P $port start-server");
     } else {
       return command("adb start-server");
@@ -35,5 +35,21 @@ mixin AdbDevices on AdbCommand {
 
   Future<String> getVersion() async {
     return command("adb version");
+  }
+
+  Future<String> pair(String target) async {
+    return command("adb pair $target");
+  }
+
+  Future<String> connect(String target) async {
+    return command("adb connect $target");
+  }
+
+  Future<String> disconnect(String target) async {
+    return command("adb disconnect $target");
+  }
+
+  Future<String> tcpip(String port) async {
+    return command("adb tcpip $port");
   }
 }

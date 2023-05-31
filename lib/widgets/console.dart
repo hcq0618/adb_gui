@@ -71,7 +71,7 @@ class _ConsoleState extends State<Console> {
       color: Colors.black,
       child: SingleChildScrollView(
         controller: _scrollController,
-        child: Text(
+        child: SelectableText(
           _consoleOutput,
           style: const TextStyle(color: Colors.white),
         ),

@@ -1,7 +1,8 @@
 import 'package:adb_gui/commands/adb.dart';
-import 'package:adb_gui/ui/console.dart';
-import 'package:adb_gui/ui/refresh_button.dart';
-import 'package:adb_gui/ui/value_command_field.dart';
+import 'package:adb_gui/commands/adb_packages.dart';
+import 'package:adb_gui/widgets/console.dart';
+import 'package:adb_gui/widgets/refresh_button.dart';
+import 'package:adb_gui/widgets/value_command_field.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
@@ -83,7 +84,9 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               children: <Widget>[
                 _buildDeviceSelector(),
-                _buildServerButtons(),
+                _buildDeviceCommandButtons(),
+                _buildWirelessCommandButtons(),
+                _buildPackageCommandButtons()
               ],
             ),
           ),
@@ -109,7 +112,9 @@ class _HomePageState extends State<HomePage> {
           hint: const Text('Devices'),
           items: widget._deviceItems,
           onChanged: (String? device) {
-            widget._adb.selectedDevice = device ?? "";
+            setState(() {
+              widget._adb.selectedDevice = device ?? "";
+            });
           }),
       RefreshButton(onPressed: () {
         setState(() {
@@ -128,7 +133,7 @@ class _HomePageState extends State<HomePage> {
     ]);
   }
 
-  Widget _buildServerButtons() {
+  Widget _buildDeviceCommandButtons() {
     return Padding(
       padding: const EdgeInsets.only(top: 10),
       child: Row(children: [
@@ -141,7 +146,7 @@ class _HomePageState extends State<HomePage> {
         Padding(
           padding: const EdgeInsets.only(left: 20),
           child: ValueCommandField(
-            hint: "Port",
+            hint: "port",
             buttonText: "Start Adb",
             onPressed: (String text) async {
               final output = await widget._adb.startAdb(port: text);
@@ -157,8 +162,113 @@ class _HomePageState extends State<HomePage> {
                 final output = await widget._adb.stopAdb();
                 _consoleController.outputConsole(output);
               }),
-        )
+        ),
       ]),
+    );
+  }
+
+  Widget _buildWirelessCommandButtons() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Column(
+        children: [
+          Row(children: [
+            ValueCommandField(
+              width: 160,
+              hint: "ip address:[port]",
+              buttonText: "Wireless Connect Device",
+              onPressed: (String text) async {
+                final output = await widget._adb.connect(text);
+                _consoleController.outputConsole(output);
+              },
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 20),
+              child: ValueCommandField(
+                width: 100,
+                hint: "ip address",
+                buttonText: "Wireless Disconnect Device",
+                onPressed: (String text) async {
+                  final output = await widget._adb.disconnect(text);
+                  _consoleController.outputConsole(output);
+                },
+              ),
+            )
+          ]),
+          Row(
+            children: [
+              ValueCommandField(
+                width: 160,
+                hint: "ip address:[port]",
+                buttonText: "Wireless Pairing Device",
+                onPressed: (String text) async {
+                  final output = await widget._adb.pair(text);
+                  _consoleController.outputConsole(output);
+                },
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 20),
+                child: ValueCommandField(
+                  hint: "port",
+                  buttonText: "Listen TCP/IP Port",
+                  onPressed: (String text) async {
+                    final output = await widget._adb.tcpip(text);
+                    _consoleController.outputConsole(output);
+                  },
+                ),
+              )
+            ],
+          )
+        ],
+      ),
+    );
+  }
+
+  var _listPackagesParameter = PackagesParameter.all.value;
+  final _listPackagesParameters = {
+    PackagesParameter.all.value: 'All',
+    PackagesParameter.withApk.value: 'With Apk',
+    PackagesParameter.withInstaller.value: 'With Installer',
+    PackagesParameter.onlyDisabled.value: 'Only Disabled',
+    PackagesParameter.onlyEnabled.value: 'Only Enabled',
+    PackagesParameter.onlySystem.value: 'Only System',
+    PackagesParameter.only3rdParty.value: 'Only 3rd-Party',
+    PackagesParameter.includeUninstalled.value: 'Include Uninstalled'
+  };
+
+  Widget _buildPackageCommandButtons() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Row(
+        children: [
+          DropdownButton<String>(
+              value: _listPackagesParameter,
+              hint: const Text('Devices'),
+              items: _listPackagesParameters.keys
+                  .map((e) => DropdownMenuItem<String>(
+                      value: e, child: Text(_listPackagesParameters[e] ?? "")))
+                  .toList(),
+              onChanged: (String? parameter) {
+                setState(() {
+                  _listPackagesParameter =
+                      parameter ?? PackagesParameter.all.value;
+                });
+              }),
+          Padding(
+            padding: const EdgeInsets.only(left: 10),
+            child: ValueCommandField(
+              width: 100,
+              hint: "filter name",
+              buttonText: "List Packages",
+              onPressed: (String text) async {
+                final output = await widget._adb
+                    .packages(_listPackagesParameter, filter: text);
+                _consoleController.outputConsole(output);
+              },
+            ),
+          )
+        ],
+      ),
     );
   }
 }
