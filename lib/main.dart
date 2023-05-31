@@ -5,9 +5,21 @@ import 'package:adb_gui/widgets/refresh_button.dart';
 import 'package:adb_gui/widgets/value_command_field.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:window_manager/window_manager.dart';
 
 void main() async {
-  final Adb adb = Adb();
+  WidgetsFlutterBinding.ensureInitialized();
+  await windowManager.ensureInitialized();
+  const windowOptions = WindowOptions(
+    size: Size(1500, 1500),
+    center: true,
+  );
+  windowManager.waitUntilReadyToShow(windowOptions, () async {
+    await windowManager.show();
+    await windowManager.focus();
+  });
+
+  final adb = Adb();
   final devices = await adb.getOnlineDevices();
 
   // print(devices);
@@ -85,10 +97,8 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               children: <Widget>[
                 _buildDeviceSelector(),
-                _buildDeviceCommandButtons(),
                 _buildWirelessCommandButtons(),
                 _buildPackageCommandButtons(),
-                _buildInstallCommandButtons()
               ],
             ),
           ),
@@ -131,98 +141,94 @@ class _HomePageState extends State<HomePage> {
             onPressed: () {
               _consoleController.clearConsole();
             }),
-      )
+      ),
+      _buildDeviceCommandButtons(),
     ]);
   }
 
   Widget _buildDeviceCommandButtons() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: Row(children: [
-        OutlinedButton(
+    return Row(children: [
+      Padding(
+        padding: const EdgeInsets.only(left: 20),
+        child: OutlinedButton(
             child: const Text("Version"),
             onPressed: () async {
               final output = await widget._adb.getVersion();
               _consoleController.outputConsole(output);
             }),
-        Padding(
-          padding: const EdgeInsets.only(left: 20),
-          child: ValueCommandField(
-            hint: "port",
-            buttonText: "Start Adb",
-            onPressed: (String text) async {
-              final output = await widget._adb.startAdb(port: text);
+      ),
+      Padding(
+        padding: const EdgeInsets.only(left: 20),
+        child: ValueCommandField(
+          hint: "port",
+          buttonText: "Start Adb",
+          onPressed: (String text) async {
+            final output = await widget._adb.startAdb(port: text);
+            _consoleController.outputConsole(output);
+          },
+        ),
+      ),
+      Padding(
+        padding: const EdgeInsets.only(left: 10),
+        child: OutlinedButton(
+            child: const Text("Stop Adb"),
+            onPressed: () async {
+              final output = await widget._adb.stopAdb();
               _consoleController.outputConsole(output);
-            },
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 10),
-          child: OutlinedButton(
-              child: const Text("Stop Adb"),
-              onPressed: () async {
-                final output = await widget._adb.stopAdb();
-                _consoleController.outputConsole(output);
-              }),
-        ),
-      ]),
-    );
+            }),
+      ),
+    ]);
   }
 
   Widget _buildWirelessCommandButtons() {
     return Padding(
       padding: const EdgeInsets.only(top: 10),
-      child: Column(
-        children: [
-          Row(children: [
-            ValueCommandField(
-              width: 160,
-              hint: "ip address:[port]",
-              buttonText: "Wireless Connect Device",
-              onPressed: (String text) async {
-                final output = await widget._adb.connect(text);
-                _consoleController.outputConsole(output);
-              },
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 20),
-              child: ValueCommandField(
-                width: 100,
-                hint: "ip address",
-                buttonText: "Wireless Disconnect Device",
-                onPressed: (String text) async {
-                  final output = await widget._adb.disconnect(text);
-                  _consoleController.outputConsole(output);
-                },
-              ),
-            )
-          ]),
-          Row(
-            children: [
-              ValueCommandField(
-                width: 160,
-                hint: "ip address:[port]",
-                buttonText: "Wireless Pairing Device",
-                onPressed: (String text) async {
-                  final output = await widget._adb.pair(text);
-                  _consoleController.outputConsole(output);
-                },
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 20),
-                child: ValueCommandField(
-                  hint: "port",
-                  buttonText: "Listen TCP/IP Port",
-                  onPressed: (String text) async {
-                    final output = await widget._adb.tcpip(text);
-                    _consoleController.outputConsole(output);
-                  },
-                ),
-              )
-            ],
-          )
-        ],
-      ),
+      child: Row(children: [
+        ValueCommandField(
+          width: 160,
+          hint: "ip address:[port]",
+          buttonText: "Wireless Connect Device",
+          onPressed: (String text) async {
+            final output = await widget._adb.connect(text);
+            _consoleController.outputConsole(output);
+          },
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20),
+          child: ValueCommandField(
+            width: 100,
+            hint: "ip address",
+            buttonText: "Wireless Disconnect Device",
+            onPressed: (String text) async {
+              final output = await widget._adb.disconnect(text);
+              _consoleController.outputConsole(output);
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20),
+          child: ValueCommandField(
+            width: 160,
+            hint: "ip address:[port]",
+            buttonText: "Wireless Pairing Device",
+            onPressed: (String text) async {
+              final output = await widget._adb.pair(text);
+              _consoleController.outputConsole(output);
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20),
+          child: ValueCommandField(
+            hint: "port",
+            buttonText: "Listen TCP/IP Port",
+            onPressed: (String text) async {
+              final output = await widget._adb.tcpip(text);
+              _consoleController.outputConsole(output);
+            },
+          ),
+        )
+      ]),
     );
   }
 
@@ -268,7 +274,8 @@ class _HomePageState extends State<HomePage> {
                 _consoleController.outputConsole(output);
               },
             ),
-          )
+          ),
+          _buildInstallCommandButtons()
         ],
       ),
     );
@@ -290,11 +297,11 @@ class _HomePageState extends State<HomePage> {
   };
 
   Widget _buildInstallCommandButtons() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: Row(
-        children: [
-          DropdownButton<String>(
+    return Row(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 20),
+          child: DropdownButton<String>(
               value: _installPackageParameter,
               hint: const Text('Parameters'),
               items: _installPackageParameters.keys
@@ -308,30 +315,29 @@ class _HomePageState extends State<HomePage> {
                       parameter ?? InstallPackageParameter.normal.value;
                 });
               }),
-          Padding(
-            padding: const EdgeInsets.only(left: 10),
-            child: OutlinedButton(
-                child: const Text("Pick an Apk"),
-                onPressed: () async {
-                  FilePickerResult? result =
-                      await FilePicker.platform.pickFiles(
-                    type: FileType.custom,
-                    allowedExtensions: ['apk'],
-                  );
-                  if (result != null) {
-                    final path = result.files.single.path;
-                    if (path != null) {
-                      final output = await widget._adb
-                          .installPackage(_installPackageParameter, path);
-                      _consoleController.outputConsole(output);
-                    }
-                  } else {
-                    // User canceled the picker
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 10),
+          child: OutlinedButton(
+              child: const Text("Install an Apk"),
+              onPressed: () async {
+                FilePickerResult? result = await FilePicker.platform.pickFiles(
+                  type: FileType.custom,
+                  allowedExtensions: ['apk'],
+                );
+                if (result != null) {
+                  final path = result.files.single.path;
+                  if (path != null) {
+                    final output = await widget._adb
+                        .installPackage(_installPackageParameter, path);
+                    _consoleController.outputConsole(output);
                   }
-                }),
-          )
-        ],
-      ),
+                } else {
+                  // User canceled the picker
+                }
+              }),
+        )
+      ],
     );
   }
 }
