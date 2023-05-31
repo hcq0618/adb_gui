@@ -3,6 +3,7 @@ import 'package:adb_gui/commands/adb_packages.dart';
 import 'package:adb_gui/widgets/console.dart';
 import 'package:adb_gui/widgets/refresh_button.dart';
 import 'package:adb_gui/widgets/value_command_field.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
@@ -86,7 +87,8 @@ class _HomePageState extends State<HomePage> {
                 _buildDeviceSelector(),
                 _buildDeviceCommandButtons(),
                 _buildWirelessCommandButtons(),
-                _buildPackageCommandButtons()
+                _buildPackageCommandButtons(),
+                _buildInstallCommandButtons()
               ],
             ),
           ),
@@ -224,16 +226,16 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  var _listPackagesParameter = PackagesParameter.all.value;
+  var _listPackagesParameter = ListPackagesParameter.all.value;
   final _listPackagesParameters = {
-    PackagesParameter.all.value: 'All',
-    PackagesParameter.withApk.value: 'With Apk',
-    PackagesParameter.withInstaller.value: 'With Installer',
-    PackagesParameter.onlyDisabled.value: 'Only Disabled',
-    PackagesParameter.onlyEnabled.value: 'Only Enabled',
-    PackagesParameter.onlySystem.value: 'Only System',
-    PackagesParameter.only3rdParty.value: 'Only 3rd-Party',
-    PackagesParameter.includeUninstalled.value: 'Include Uninstalled'
+    ListPackagesParameter.all.value: 'All',
+    ListPackagesParameter.withApk.value: 'With Apk',
+    ListPackagesParameter.withInstaller.value: 'With Installer',
+    ListPackagesParameter.onlyDisabled.value: 'Only Disabled',
+    ListPackagesParameter.onlyEnabled.value: 'Only Enabled',
+    ListPackagesParameter.onlySystem.value: 'Only System',
+    ListPackagesParameter.only3rdParty.value: 'Only 3rd-Party',
+    ListPackagesParameter.includeUninstalled.value: 'Include Uninstalled'
   };
 
   Widget _buildPackageCommandButtons() {
@@ -243,7 +245,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           DropdownButton<String>(
               value: _listPackagesParameter,
-              hint: const Text('Devices'),
+              hint: const Text('Parameters'),
               items: _listPackagesParameters.keys
                   .map((e) => DropdownMenuItem<String>(
                       value: e, child: Text(_listPackagesParameters[e] ?? "")))
@@ -251,7 +253,7 @@ class _HomePageState extends State<HomePage> {
               onChanged: (String? parameter) {
                 setState(() {
                   _listPackagesParameter =
-                      parameter ?? PackagesParameter.all.value;
+                      parameter ?? ListPackagesParameter.all.value;
                 });
               }),
           Padding(
@@ -262,10 +264,71 @@ class _HomePageState extends State<HomePage> {
               buttonText: "List Packages",
               onPressed: (String text) async {
                 final output = await widget._adb
-                    .packages(_listPackagesParameter, filter: text);
+                    .listPackages(_listPackagesParameter, filter: text);
                 _consoleController.outputConsole(output);
               },
             ),
+          )
+        ],
+      ),
+    );
+  }
+
+  var _installPackageParameter = InstallPackageParameter.normal.value;
+  final _installPackageParameters = {
+    InstallPackageParameter.normal.value: 'Normal',
+    InstallPackageParameter.toProtectedDir.value: 'To Protected Directory',
+    InstallPackageParameter.toSDCard.value: 'To SD Card',
+    InstallPackageParameter.allowOverwrite.value: 'Allow Overwrite',
+    InstallPackageParameter.allowTestOnly.value: 'Allow Test Only',
+    InstallPackageParameter.allowDowngrade.value: 'Allow Downgrade',
+    InstallPackageParameter.grantAllPermissions.value: 'Grant All Permissions',
+    InstallPackageParameter.armeabiV7a.value: 'For armeabi-v7a Only',
+    InstallPackageParameter.arm64V8a.value: 'For arm64-v8a Only',
+    InstallPackageParameter.v86.value: 'For v86 Only',
+    InstallPackageParameter.x86_64.value: 'For x86_64 Only'
+  };
+
+  Widget _buildInstallCommandButtons() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Row(
+        children: [
+          DropdownButton<String>(
+              value: _installPackageParameter,
+              hint: const Text('Parameters'),
+              items: _installPackageParameters.keys
+                  .map((e) => DropdownMenuItem<String>(
+                      value: e,
+                      child: Text(_installPackageParameters[e] ?? "")))
+                  .toList(),
+              onChanged: (String? parameter) {
+                setState(() {
+                  _installPackageParameter =
+                      parameter ?? InstallPackageParameter.normal.value;
+                });
+              }),
+          Padding(
+            padding: const EdgeInsets.only(left: 10),
+            child: OutlinedButton(
+                child: const Text("Pick an Apk"),
+                onPressed: () async {
+                  FilePickerResult? result =
+                      await FilePicker.platform.pickFiles(
+                    type: FileType.custom,
+                    allowedExtensions: ['apk'],
+                  );
+                  if (result != null) {
+                    final path = result.files.single.path;
+                    if (path != null) {
+                      final output = await widget._adb
+                          .installPackage(_installPackageParameter, path);
+                      _consoleController.outputConsole(output);
+                    }
+                  } else {
+                    // User canceled the picker
+                  }
+                }),
           )
         ],
       ),

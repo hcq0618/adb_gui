@@ -1,13 +1,19 @@
 import 'package:adb_gui/commands/adb_command.dart';
 
 mixin AdbPackages on AdbCommand {
-  Future<String> packages(String parameter, {String filter = ''}) async {
+  Future<String> listPackages(String parameter, {String filter = ''}) async {
     return command(
         "adb ${selectedDeviceParameter()} shell pm list packages $parameter $filter");
   }
+
+  Future<String> installPackage(String parameter, String path) async {
+    // https://linuxhint.com/deal-spaces-file-path-linux/
+    return command(
+        "adb ${selectedDeviceParameter()} install $parameter '$path'");
+  }
 }
 
-enum PackagesParameter {
+enum ListPackagesParameter {
   all(''),
   withApk('-f'),
   withInstaller('-i'),
@@ -19,5 +25,23 @@ enum PackagesParameter {
 
   final String value;
 
-  const PackagesParameter(this.value);
+  const ListPackagesParameter(this.value);
+}
+
+enum InstallPackageParameter {
+  normal(''),
+  toProtectedDir('-l'),
+  toSDCard('-s'),
+  allowOverwrite('-r'),
+  allowTestOnly('-t'),
+  allowDowngrade('-d'),
+  grantAllPermissions('-g'),
+  armeabiV7a('armeabi-v7a'),
+  arm64V8a('arm64-v8a'),
+  v86('v86'),
+  x86_64('x86_64');
+
+  final String value;
+
+  const InstallPackageParameter(this.value);
 }
