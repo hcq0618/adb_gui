@@ -11,7 +11,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
   const windowOptions = WindowOptions(
-    size: Size(1500, 1500),
+    size: Size(1550, 1000),
     center: true,
   );
   windowManager.waitUntilReadyToShow(windowOptions, () async {
@@ -108,6 +108,16 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Widget _buildDivider() {
+    return const VerticalDivider(
+      width: 30,
+      thickness: 1,
+      indent: 10,
+      endIndent: 10,
+      color: Colors.grey,
+    );
+  }
+
   Widget _buildConsole() {
     return Expanded(
       child: Align(
@@ -147,19 +157,17 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildDeviceCommandButtons() {
-    return Row(children: [
-      Padding(
-        padding: const EdgeInsets.only(left: 20),
-        child: OutlinedButton(
+    return IntrinsicHeight(
+      child: Row(children: [
+        _buildDivider(),
+        OutlinedButton(
             child: const Text("Version"),
             onPressed: () async {
               final output = await widget._adb.getVersion();
               _consoleController.outputConsole(output);
             }),
-      ),
-      Padding(
-        padding: const EdgeInsets.only(left: 20),
-        child: ValueCommandField(
+        _buildDivider(),
+        ValueCommandField(
           hint: "port",
           buttonText: "Start Adb",
           onPressed: (String text) async {
@@ -167,35 +175,35 @@ class _HomePageState extends State<HomePage> {
             _consoleController.outputConsole(output);
           },
         ),
-      ),
-      Padding(
-        padding: const EdgeInsets.only(left: 10),
-        child: OutlinedButton(
-            child: const Text("Stop Adb"),
-            onPressed: () async {
-              final output = await widget._adb.stopAdb();
-              _consoleController.outputConsole(output);
-            }),
-      ),
-    ]);
+        Padding(
+          padding: const EdgeInsets.only(left: 10),
+          child: OutlinedButton(
+              child: const Text("Stop Adb"),
+              onPressed: () async {
+                final output = await widget._adb.stopAdb();
+                _consoleController.outputConsole(output);
+              }),
+        ),
+      ]),
+    );
   }
 
   Widget _buildWirelessCommandButtons() {
     return Padding(
       padding: const EdgeInsets.only(top: 10),
-      child: Row(children: [
-        ValueCommandField(
-          width: 160,
-          hint: "ip address:[port]",
-          buttonText: "Wireless Connect Device",
-          onPressed: (String text) async {
-            final output = await widget._adb.connect(text);
-            _consoleController.outputConsole(output);
-          },
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20),
-          child: ValueCommandField(
+      child: IntrinsicHeight(
+        child: Row(children: [
+          ValueCommandField(
+            width: 160,
+            hint: "ip address:[port]",
+            buttonText: "Wireless Connect Device",
+            onPressed: (String text) async {
+              final output = await widget._adb.connect(text);
+              _consoleController.outputConsole(output);
+            },
+          ),
+          _buildDivider(),
+          ValueCommandField(
             width: 100,
             hint: "ip address",
             buttonText: "Wireless Disconnect Device",
@@ -204,10 +212,8 @@ class _HomePageState extends State<HomePage> {
               _consoleController.outputConsole(output);
             },
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20),
-          child: ValueCommandField(
+          _buildDivider(),
+          ValueCommandField(
             width: 160,
             hint: "ip address:[port]",
             buttonText: "Wireless Pairing Device",
@@ -216,10 +222,8 @@ class _HomePageState extends State<HomePage> {
               _consoleController.outputConsole(output);
             },
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20),
-          child: ValueCommandField(
+          _buildDivider(),
+          ValueCommandField(
             hint: "port",
             buttonText: "Listen TCP/IP Port",
             onPressed: (String text) async {
@@ -227,8 +231,8 @@ class _HomePageState extends State<HomePage> {
               _consoleController.outputConsole(output);
             },
           ),
-        )
-      ]),
+        ]),
+      ),
     );
   }
 
@@ -247,36 +251,50 @@ class _HomePageState extends State<HomePage> {
   Widget _buildPackageCommandButtons() {
     return Padding(
       padding: const EdgeInsets.only(top: 10),
-      child: Row(
-        children: [
-          DropdownButton<String>(
-              value: _listPackagesParameter,
-              hint: const Text('Parameters'),
-              items: _listPackagesParameters.keys
-                  .map((e) => DropdownMenuItem<String>(
-                      value: e, child: Text(_listPackagesParameters[e] ?? "")))
-                  .toList(),
-              onChanged: (String? parameter) {
-                setState(() {
-                  _listPackagesParameter =
-                      parameter ?? ListPackagesParameter.all.value;
-                });
-              }),
-          Padding(
-            padding: const EdgeInsets.only(left: 10),
-            child: ValueCommandField(
-              width: 100,
-              hint: "filter name",
-              buttonText: "List Packages",
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            DropdownButton<String>(
+                value: _listPackagesParameter,
+                hint: const Text('Parameters'),
+                items: _listPackagesParameters.keys
+                    .map((e) => DropdownMenuItem<String>(
+                        value: e,
+                        child: Text(_listPackagesParameters[e] ?? "")))
+                    .toList(),
+                onChanged: (String? parameter) {
+                  setState(() {
+                    _listPackagesParameter =
+                        parameter ?? ListPackagesParameter.all.value;
+                  });
+                }),
+            Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: ValueCommandField(
+                width: 100,
+                hint: "filter name",
+                buttonText: "List Packages",
+                onPressed: (String text) async {
+                  final output = await widget._adb
+                      .listPackages(_listPackagesParameter, filter: text);
+                  _consoleController.outputConsole(output);
+                },
+              ),
+            ),
+            _buildInstallCommandButton(),
+            _buildUninstallPackageButton(),
+            _buildDivider(),
+            ValueCommandField(
+              width: 120,
+              hint: "package name",
+              buttonText: "Clear Data",
               onPressed: (String text) async {
-                final output = await widget._adb
-                    .listPackages(_listPackagesParameter, filter: text);
+                final output = await widget._adb.clearData(text);
                 _consoleController.outputConsole(output);
               },
-            ),
-          ),
-          _buildInstallCommandButtons()
-        ],
+            )
+          ],
+        ),
       ),
     );
   }
@@ -296,26 +314,23 @@ class _HomePageState extends State<HomePage> {
     InstallPackageParameter.x86_64.value: 'For x86_64 Only'
   };
 
-  Widget _buildInstallCommandButtons() {
+  Widget _buildInstallCommandButton() {
     return Row(
       children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 20),
-          child: DropdownButton<String>(
-              value: _installPackageParameter,
-              hint: const Text('Parameters'),
-              items: _installPackageParameters.keys
-                  .map((e) => DropdownMenuItem<String>(
-                      value: e,
-                      child: Text(_installPackageParameters[e] ?? "")))
-                  .toList(),
-              onChanged: (String? parameter) {
-                setState(() {
-                  _installPackageParameter =
-                      parameter ?? InstallPackageParameter.normal.value;
-                });
-              }),
-        ),
+        _buildDivider(),
+        DropdownButton<String>(
+            value: _installPackageParameter,
+            hint: const Text('Parameters'),
+            items: _installPackageParameters.keys
+                .map((e) => DropdownMenuItem<String>(
+                    value: e, child: Text(_installPackageParameters[e] ?? "")))
+                .toList(),
+            onChanged: (String? parameter) {
+              setState(() {
+                _installPackageParameter =
+                    parameter ?? InstallPackageParameter.normal.value;
+              });
+            }),
         Padding(
           padding: const EdgeInsets.only(left: 10),
           child: OutlinedButton(
@@ -337,6 +352,35 @@ class _HomePageState extends State<HomePage> {
                 }
               }),
         )
+      ],
+    );
+  }
+
+  var _isKeepDataChecked = false;
+
+  Widget _buildUninstallPackageButton() {
+    return Row(
+      children: [
+        _buildDivider(),
+        ValueCommandField(
+          width: 120,
+          hint: "package name",
+          buttonText: "Uninstall an App",
+          onPressed: (String text) async {
+            final output = await widget._adb
+                .uninstallPackage(text, keepData: _isKeepDataChecked);
+            _consoleController.outputConsole(output);
+          },
+        ),
+        Checkbox(
+          value: _isKeepDataChecked,
+          onChanged: (bool? value) {
+            setState(() {
+              _isKeepDataChecked = value!;
+            });
+          },
+        ),
+        const Text("Keep Data")
       ],
     );
   }

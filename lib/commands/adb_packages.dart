@@ -11,6 +11,23 @@ mixin AdbPackages on AdbCommand {
     return command(
         "adb ${selectedDeviceParameter()} install $parameter '$path'");
   }
+
+  Future<String> uninstallPackage(String packageName,
+      {bool keepData = false}) async {
+    String parameter;
+    if (keepData) {
+      parameter = '-k';
+    } else {
+      parameter = '';
+    }
+    return command(
+        "adb ${selectedDeviceParameter()} uninstall $parameter $packageName");
+  }
+
+  Future<String> clearData(String packageName) async {
+    return command(
+        "adb ${selectedDeviceParameter()} shell pm clear $packageName");
+  }
 }
 
 enum ListPackagesParameter {
