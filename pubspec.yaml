@@ -37,6 +37,8 @@ dependencies:
   file_picker: ^5.3.2
   # https://pub.dev/packages/window_manager
   window_manager: ^0.2.7
+  # https://pub.dev/packages/dartx
+  dartx: ^1.1.0
 
 dev_dependencies:
   # The "flutter_lints" package below contains a set of recommended lints to
