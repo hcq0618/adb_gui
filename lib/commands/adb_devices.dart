@@ -21,35 +21,35 @@ mixin AdbDevices on AdbCommand {
     return result;
   }
 
-  Future<String> startAdb({String port = ''}) async {
+  Stream<String> startAdb({String port = ''}) async* {
     if (port.isNotEmpty) {
-      return command("adb -P $port start-server");
+      yield* command("adb -P $port start-server");
     } else {
-      return command("adb start-server");
+      yield* command("adb start-server");
     }
   }
 
-  Future<String> stopAdb() async {
-    return command("adb kill-server");
+  Stream<String> stopAdb() async* {
+    yield* command("adb kill-server");
   }
 
-  Future<String> getVersion() async {
-    return command("adb version");
+  Stream<String> getVersion() async* {
+    yield* command("adb version");
   }
 
-  Future<String> pair(String target) async {
-    return command("adb pair $target");
+  Stream<String> pair(String target) async* {
+    yield* command("adb pair $target");
   }
 
-  Future<String> connect(String target) async {
-    return command("adb connect $target");
+  Stream<String> connect(String target) async* {
+    yield* command("adb connect $target");
   }
 
-  Future<String> disconnect(String target) async {
-    return command("adb disconnect $target");
+  Stream<String> disconnect(String target) async* {
+    yield* command("adb disconnect $target");
   }
 
-  Future<String> tcpip(String port) async {
-    return command("adb tcpip $port");
+  Stream<String> tcpip(String port) async* {
+    yield* command("adb tcpip $port");
   }
 }

@@ -16,6 +16,12 @@ class ConsoleController {
     _state._outputConsole(output);
   }
 
+  outputStreamConsole(Stream<String> output) {
+    output.listen((event) {
+      outputConsole(event);
+    });
+  }
+
   clearConsole() {
     _state._clearConsole();
   }

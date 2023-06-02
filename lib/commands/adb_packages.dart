@@ -1,32 +1,42 @@
 import 'package:adb_gui/commands/adb_command.dart';
 
 mixin AdbPackages on AdbCommand {
-  Future<String> listPackages(String parameter, {String filter = ''}) async {
-    return command(
+  Stream<String> listPackages(String parameter, {String filter = ''}) async* {
+    yield* command(
         "adb ${selectedDeviceParameter()} shell pm list packages $parameter $filter");
   }
 
-  Future<String> installPackage(String parameter, String path) async {
+  Stream<String> installPackage(String parameter, String path) async* {
     // https://linuxhint.com/deal-spaces-file-path-linux/
-    return command(
+    yield* command(
         "adb ${selectedDeviceParameter()} install $parameter '$path'");
   }
 
-  Future<String> uninstallPackage(String packageName,
-      {bool keepData = false}) async {
+  Stream<String> uninstallPackage(String packageName,
+      {bool keepData = false}) async* {
     String parameter;
     if (keepData) {
       parameter = '-k';
     } else {
       parameter = '';
     }
-    return command(
+    yield* command(
         "adb ${selectedDeviceParameter()} uninstall $parameter $packageName");
   }
 
-  Future<String> clearData(String packageName) async {
-    return command(
+  Stream<String> clearData(String packageName) async* {
+    yield* command(
         "adb ${selectedDeviceParameter()} shell pm clear $packageName");
+  }
+
+  Stream<String> showPackageDetails(String packageName) async* {
+    yield* command(
+        "adb ${selectedDeviceParameter()} shell dumpsys package $packageName");
+  }
+
+  Stream<String> showPackagePath(String packageName) async* {
+    yield* command(
+        "adb ${selectedDeviceParameter()} shell pm path $packageName");
   }
 }
 

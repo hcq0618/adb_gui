@@ -12,8 +12,9 @@ class AdbCommand {
     }
   }
 
-  Future<String> command(String command) async {
+  Stream<String> command(String command) async* {
     try {
+      yield "\$$command";
       final output = await shell.run(command);
       final String outputText;
 
@@ -23,9 +24,9 @@ class AdbCommand {
         outputText = output.outText;
       }
 
-      return "\$$command\n$outputText";
+      yield outputText;
     } catch (e) {
-      return "\$$command\n$e";
+      yield e.toString();
     }
   }
 }

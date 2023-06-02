@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:adb_gui/commands/adb.dart';
 import 'package:adb_gui/commands/adb_packages.dart';
 import 'package:adb_gui/widgets/console.dart';
@@ -37,7 +39,9 @@ class AdbGUIApp extends StatelessWidget {
     return MaterialApp(
       title: 'ADB GUI',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(
+            background: const Color.fromARGB(255, 204, 232, 207),
+            seedColor: Colors.blueAccent),
         useMaterial3: true,
       ),
       home: HomePage(adb, devices, title: 'ADB GUI'),
@@ -99,6 +103,8 @@ class _HomePageState extends State<HomePage> {
                 _buildDeviceSelector(),
                 _buildWirelessCommandButtons(),
                 _buildPackageCommandButtons(),
+                _buildPackageCommandV2Buttons(),
+                _buildComponentCommandButtons()
               ],
             ),
           ),
@@ -162,26 +168,24 @@ class _HomePageState extends State<HomePage> {
         _buildDivider(),
         OutlinedButton(
             child: const Text("Version"),
-            onPressed: () async {
-              final output = await widget._adb.getVersion();
-              _consoleController.outputConsole(output);
+            onPressed: () {
+              _consoleController.outputStreamConsole(widget._adb.getVersion());
             }),
         _buildDivider(),
         ValueCommandField(
           hint: "port",
           buttonText: "Start Adb",
-          onPressed: (String text) async {
-            final output = await widget._adb.startAdb(port: text);
-            _consoleController.outputConsole(output);
+          onPressed: (String text) {
+            _consoleController
+                .outputStreamConsole(widget._adb.startAdb(port: text));
           },
         ),
         Padding(
           padding: const EdgeInsets.only(left: 10),
           child: OutlinedButton(
               child: const Text("Stop Adb"),
-              onPressed: () async {
-                final output = await widget._adb.stopAdb();
-                _consoleController.outputConsole(output);
+              onPressed: () {
+                _consoleController.outputStreamConsole(widget._adb.stopAdb());
               }),
         ),
       ]),
@@ -197,9 +201,8 @@ class _HomePageState extends State<HomePage> {
             width: 160,
             hint: "ip address:[port]",
             buttonText: "Wireless Connect Device",
-            onPressed: (String text) async {
-              final output = await widget._adb.connect(text);
-              _consoleController.outputConsole(output);
+            onPressed: (String text) {
+              _consoleController.outputStreamConsole(widget._adb.connect(text));
             },
           ),
           _buildDivider(),
@@ -207,9 +210,9 @@ class _HomePageState extends State<HomePage> {
             width: 100,
             hint: "ip address",
             buttonText: "Wireless Disconnect Device",
-            onPressed: (String text) async {
-              final output = await widget._adb.disconnect(text);
-              _consoleController.outputConsole(output);
+            onPressed: (String text) {
+              _consoleController
+                  .outputStreamConsole(widget._adb.disconnect(text));
             },
           ),
           _buildDivider(),
@@ -217,18 +220,16 @@ class _HomePageState extends State<HomePage> {
             width: 160,
             hint: "ip address:[port]",
             buttonText: "Wireless Pairing Device",
-            onPressed: (String text) async {
-              final output = await widget._adb.pair(text);
-              _consoleController.outputConsole(output);
+            onPressed: (String text) {
+              _consoleController.outputStreamConsole(widget._adb.pair(text));
             },
           ),
           _buildDivider(),
           ValueCommandField(
             hint: "port",
             buttonText: "Listen TCP/IP Port",
-            onPressed: (String text) async {
-              final output = await widget._adb.tcpip(text);
-              _consoleController.outputConsole(output);
+            onPressed: (String text) {
+              _consoleController.outputStreamConsole(widget._adb.tcpip(text));
             },
           ),
         ]),
@@ -274,10 +275,9 @@ class _HomePageState extends State<HomePage> {
                 width: 100,
                 hint: "filter name",
                 buttonText: "List Packages",
-                onPressed: (String text) async {
-                  final output = await widget._adb
-                      .listPackages(_listPackagesParameter, filter: text);
-                  _consoleController.outputConsole(output);
+                onPressed: (String text) {
+                  _consoleController.outputStreamConsole(widget._adb
+                      .listPackages(_listPackagesParameter, filter: text));
                 },
               ),
             ),
@@ -288,9 +288,9 @@ class _HomePageState extends State<HomePage> {
               width: 120,
               hint: "package name",
               buttonText: "Clear Data",
-              onPressed: (String text) async {
-                final output = await widget._adb.clearData(text);
-                _consoleController.outputConsole(output);
+              onPressed: (String text) {
+                _consoleController
+                    .outputStreamConsole(widget._adb.clearData(text));
               },
             )
           ],
@@ -343,9 +343,8 @@ class _HomePageState extends State<HomePage> {
                 if (result != null) {
                   final path = result.files.single.path;
                   if (path != null) {
-                    final output = await widget._adb
-                        .installPackage(_installPackageParameter, path);
-                    _consoleController.outputConsole(output);
+                    _consoleController.outputStreamConsole(widget._adb
+                        .installPackage(_installPackageParameter, path));
                   }
                 } else {
                   // User canceled the picker
@@ -366,10 +365,9 @@ class _HomePageState extends State<HomePage> {
           width: 120,
           hint: "package name",
           buttonText: "Uninstall an App",
-          onPressed: (String text) async {
-            final output = await widget._adb
-                .uninstallPackage(text, keepData: _isKeepDataChecked);
-            _consoleController.outputConsole(output);
+          onPressed: (String text) {
+            _consoleController.outputStreamConsole(widget._adb
+                .uninstallPackage(text, keepData: _isKeepDataChecked));
           },
         ),
         Checkbox(
@@ -382,6 +380,65 @@ class _HomePageState extends State<HomePage> {
         ),
         const Text("Keep Data")
       ],
+    );
+  }
+
+  Widget _buildPackageCommandV2Buttons() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            ValueCommandField(
+              width: 120,
+              hint: "package name",
+              buttonText: "Show App Details",
+              onPressed: (String text) {
+                _consoleController
+                    .outputStreamConsole(widget._adb.showPackageDetails(text));
+              },
+            ),
+            _buildDivider(),
+            ValueCommandField(
+              width: 120,
+              hint: "package name",
+              buttonText: "Show App Path",
+              onPressed: (String text) {
+                _consoleController
+                    .outputStreamConsole(widget._adb.showPackagePath(text));
+              },
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildComponentCommandButtons() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            OutlinedButton(
+                child: const Text("Show Foreground Activity"),
+                onPressed: () {
+                  _consoleController.outputStreamConsole(
+                      widget._adb.showForegroundActivity());
+                }),
+            _buildDivider(),
+            ValueCommandField(
+              width: 200,
+              hint: "package name (optional)",
+              buttonText: "Show Running Services",
+              onPressed: (String text) {
+                _consoleController.outputStreamConsole(
+                    widget._adb.showRunningServices(packageName: text));
+              },
+            )
+          ],
+        ),
+      ),
     );
   }
 }
