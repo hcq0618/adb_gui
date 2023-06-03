@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
 
 class Console extends StatefulWidget {
-  final ConsoleController? controller;
+  final ConsoleController controller;
 
-  const Console({super.key, this.controller});
+  const Console(this.controller, {super.key});
 
   @override
   State<Console> createState() => _ConsoleState();
 }
 
 class ConsoleController {
-  late _ConsoleState _state;
+  final _consoleOutput = ValueNotifier('');
+  final ScrollController _scrollController = ScrollController();
+
+  ConsoleController();
 
   outputConsole(String output) {
-    _state._outputConsole(output);
+    _consoleOutput.value = "${_consoleOutput.value}\n$output";
+    _scrollToEnd();
   }
 
   outputStreamConsole(Stream<String> output) {
@@ -21,15 +25,6 @@ class ConsoleController {
       outputConsole(event);
     });
   }
-
-  clearConsole() {
-    _state._clearConsole();
-  }
-}
-
-class _ConsoleState extends State<Console> {
-  String _consoleOutput = "";
-  final ScrollController _scrollController = ScrollController();
 
   _scrollToEnd() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -43,28 +38,20 @@ class _ConsoleState extends State<Console> {
     });
   }
 
-  _outputConsole(String output) {
-    setState(() {
-      _consoleOutput = "$_consoleOutput\n$output";
-    });
-    _scrollToEnd();
+  clearConsole() {
+    _consoleOutput.value = '';
   }
 
-  _clearConsole() {
-    setState(() {
-      _consoleOutput = "";
-    });
+  _dispose() {
+    _consoleOutput.dispose();
+    _scrollController.dispose();
   }
+}
 
-  @override
-  void initState() {
-    super.initState();
-    widget.controller?._state = this;
-  }
-
+class _ConsoleState extends State<Console> {
   @override
   void dispose() {
-    _scrollController.dispose();
+    widget.controller._dispose();
     super.dispose();
   }
 
@@ -75,12 +62,17 @@ class _ConsoleState extends State<Console> {
       width: double.infinity,
       height: 200,
       color: Colors.black,
-      child: SingleChildScrollView(
-        controller: _scrollController,
-        child: SelectableText(
-          _consoleOutput,
-          style: const TextStyle(color: Colors.white),
-        ),
+      child: ValueListenableBuilder(
+        valueListenable: widget.controller._consoleOutput,
+        builder: (context, value, child) {
+          return SingleChildScrollView(
+            controller: widget.controller._scrollController,
+            child: SelectableText(
+              value,
+              style: const TextStyle(color: Colors.white),
+            ),
+          );
+        },
       ),
     );
   }

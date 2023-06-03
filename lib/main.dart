@@ -44,6 +44,7 @@ class AdbGUIApp extends StatelessWidget {
             seedColor: Colors.blueAccent),
         useMaterial3: true,
       ),
+      debugShowCheckedModeBanner: false,
       home: HomePage(adb, devices, title: 'ADB GUI'),
     );
   }
@@ -75,7 +76,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final ConsoleController _consoleController = ConsoleController();
+  final _consoleController = ConsoleController();
 
   _updateSelectedDevice() {
     if (widget._adb.selectedDevice.isEmpty) {
@@ -128,7 +129,7 @@ class _HomePageState extends State<HomePage> {
     return Expanded(
       child: Align(
         alignment: Alignment.bottomLeft,
-        child: Console(controller: _consoleController),
+        child: Console(_consoleController),
       ),
     );
   }
