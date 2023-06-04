@@ -15,18 +15,21 @@ class ConsoleController {
 
   ConsoleController();
 
-  outputConsole(String output) {
+  void outputConsole(String output) {
     _consoleOutput.value = "${_consoleOutput.value}\n$output";
     _scrollToEnd();
   }
 
-  outputStreamConsole(Stream<String> output) {
-    output.listen((event) {
-      outputConsole(event);
-    });
+  void outputStreamConsole(Stream<String> output) {
+    output.listen(
+      (out) {
+        outputConsole(out);
+      },
+      cancelOnError: true,
+    );
   }
 
-  _scrollToEnd() {
+  void _scrollToEnd() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.position.maxScrollExtent > 0) {
         _scrollController.animateTo(
@@ -38,11 +41,11 @@ class ConsoleController {
     });
   }
 
-  clearConsole() {
+  void clearConsole() {
     _consoleOutput.value = '';
   }
 
-  _dispose() {
+  void _dispose() {
     _consoleOutput.dispose();
     _scrollController.dispose();
   }
