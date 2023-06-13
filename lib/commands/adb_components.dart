@@ -19,19 +19,63 @@ mixin AdbComponents on AdbCommand {
     yield* command(
         "adb ${selectedDeviceParameter()} shell dumpsys activity services $packageName");
   }
+
+  Stream<String> startActivity(String activityPath,
+      {Map<String, String>? extraData}) async* {
+    yield* command(
+        "adb shell am start ${Intent(component: activityPath).putMap(extraData).toParameters()}");
+  }
+
+  Stream<String> startMainActivity(String packageName,
+      {Map<String, String>? extraData}) async* {
+    yield* command(
+        "adb shell monkey ${Intent(packageName: packageName, category: 'android.intent.category.LAUNCHER 1').putMap(extraData).toParameters()}");
+  }
+
+  Stream<String> startService(String servicePath,
+      {Map<String, String>? extraData}) async* {
+    yield* command(
+        "adb shell am startservice ${Intent(component: servicePath).putMap(extraData).toParameters()}");
+  }
+
+  Stream<String> stopService(String servicePath) async* {
+    yield* command(
+        "adb shell am stopservice ${Intent(component: servicePath).toParameters()}");
+  }
+
+  Stream<String> startNavigatorBar() async* {
+    yield* startService("com.android.systemui/.SystemUIService");
+  }
 }
 
 class Intent {
   final Map<String, Object?> _kv = {};
+  final String? packageName;
   final Pair<String, String>? componentName;
   final String? action;
   final String? category;
   final String? component;
 
-  Intent({this.action, this.category, this.component, this.componentName});
+  Intent(
+      {this.action,
+      this.packageName,
+      this.category,
+      this.component,
+      this.componentName});
 
   Intent putExtra(String key, Object value) {
     _kv[key] = value;
+    return this;
+  }
+
+  Intent putMap(Map<String, Object?>? map) {
+    if (map != null) {
+      map.forEach((key, value) {
+        if (key.isNotBlank) {
+          _kv[key] = value;
+        }
+      });
+    }
     return this;
   }
 
@@ -53,6 +97,7 @@ class Intent {
 
   String toParameters() {
     final sb = StringBuffer();
+    _appendOptionalParameter(sb, '-p', packageName);
     _appendOptionalParameter(sb, '-a', action);
     _appendOptionalParameter(sb, '-c', category);
     _appendOptionalParameter(sb, '-n', component);

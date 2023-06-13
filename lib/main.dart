@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:adb_gui/commands/adb.dart';
 import 'package:adb_gui/commands/adb_packages.dart';
 import 'package:adb_gui/widgets/console.dart';
@@ -78,6 +76,13 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final _consoleController = ConsoleController();
 
+  @override
+  void dispose() {
+    _intentDataKeyController.dispose();
+    _intentDataValueController.dispose();
+    super.dispose();
+  }
+
   _updateSelectedDevice() {
     if (widget._adb.selectedDevice.isEmpty) {
       if (widget._deviceItems.isNotEmpty) {
@@ -105,7 +110,8 @@ class _HomePageState extends State<HomePage> {
                 _buildWirelessCommandButtons(),
                 _buildPackageCommandButtons(),
                 _buildPackageCommandV2Buttons(),
-                _buildComponentCommandButtons()
+                _buildComponentCommandButtons(),
+                _buildComponentCommandV2Buttons()
               ],
             ),
           ),
@@ -415,6 +421,9 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  final _intentDataKeyController = TextEditingController();
+  final _intentDataValueController = TextEditingController();
+
   Widget _buildComponentCommandButtons() {
     return Padding(
       padding: const EdgeInsets.only(top: 10),
@@ -435,6 +444,92 @@ class _HomePageState extends State<HomePage> {
               onPressed: (String text) {
                 _consoleController.outputStreamConsole(
                     widget._adb.showRunningServices(packageName: text));
+              },
+            ),
+            _buildDivider(),
+            Container(
+              width: 180,
+              padding: const EdgeInsets.only(right: 10),
+              child: TextField(
+                controller: _intentDataKeyController,
+                decoration:
+                    const InputDecoration(hintText: "intent extra data key"),
+              ),
+            ),
+            SizedBox(
+              width: 180,
+              child: TextField(
+                controller: _intentDataValueController,
+                decoration:
+                    const InputDecoration(hintText: "intent extra data value"),
+              ),
+            ),
+            _buildDivider(),
+            ValueCommandField(
+              width: 270,
+              hint: "<package name>/.<activity name>",
+              buttonText: "Start Activity",
+              onPressed: (String text) {
+                _consoleController.outputStreamConsole(widget._adb
+                    .startActivity(text, extraData: {
+                  _intentDataKeyController.text: _intentDataValueController.text
+                }));
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  final _servicePathController = TextEditingController();
+
+  Widget _buildComponentCommandV2Buttons() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            ValueCommandField(
+              width: 120,
+              hint: "package name",
+              buttonText: "Start Main Activity",
+              onPressed: (String text) {
+                _consoleController.outputStreamConsole(widget._adb
+                    .startMainActivity(text, extraData: {
+                  _intentDataKeyController.text: _intentDataValueController.text
+                }));
+              },
+            ),
+            _buildDivider(),
+            ValueCommandField(
+              controller: _servicePathController,
+              width: 270,
+              hint: "<package name>/.<service name>",
+              buttonText: "Start Service",
+              onPressed: (String text) {
+                _consoleController.outputStreamConsole(widget._adb
+                    .startService(text, extraData: {
+                  _intentDataKeyController.text: _intentDataValueController.text
+                }));
+              },
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: OutlinedButton(
+                child: const Text("Stop Service"),
+                onPressed: () {
+                  _consoleController.outputStreamConsole(
+                      widget._adb.stopService(_servicePathController.text));
+                },
+              ),
+            ),
+            _buildDivider(),
+            OutlinedButton(
+              child: const Text("Start Navigator Bar"),
+              onPressed: () {
+                _consoleController
+                    .outputStreamConsole(widget._adb.startNavigatorBar());
               },
             )
           ],
