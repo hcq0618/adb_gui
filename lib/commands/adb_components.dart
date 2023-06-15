@@ -46,6 +46,41 @@ mixin AdbComponents on AdbCommand {
   Stream<String> startNavigatorBar() async* {
     yield* startService("com.android.systemui/.SystemUIService");
   }
+
+  Stream<String> sendBroadcast(String action, {String? receiverPath}) async* {
+    yield* command(
+        "adb shell am broadcast ${Intent(action: action, component: receiverPath).toParameters()}");
+  }
+}
+
+enum SystemBroadcast {
+  notApplicable(""),
+  connectivityChange("android.net.conn.CONNECTIVITY_CHANGE"),
+  screenOn("android.intent.action.SCREEN_ON"),
+  screenOff("android.intent.action.SCREEN_OFF"),
+  batteryLow("android.intent.action.BATTERY_LOW"),
+  batteryOkay("android.intent.action.BATTERY_OKAY"),
+  bootCompleted("android.intent.action.BOOT_COMPLETED"),
+  deviceStorageLow("android.intent.action.DEVICE_STORAGE_LOW"),
+  deviceStorageOk("android.intent.action.DEVICE_STORAGE_OK"),
+  packageAdded("android.intent.action.PACKAGE_ADDED"),
+  stateChange("android.net.wifi.STATE_CHANGE"),
+  wifiStateChanged("android.net.wifi.WIFI_STATE_CHANGED"),
+  batteryChanged("android.intent.action.BATTERY_CHANGED"),
+  inputMethodChanged("android.intent.action.INPUT_METHOD_CHANGED"),
+  actionPowerConnected("android.intent.action.ACTION_POWER_CONNECTED"),
+  actionPowerDisconnected("android.intent.action.ACTION_POWER_DISCONNECTED"),
+  dreamingStarted("android.intent.action.DREAMING_STARTED"),
+  dreamingStopped("android.intent.action.DREAMING_STOPPED"),
+  wallpaperChanged("android.intent.action.WALLPAPER_CHANGED"),
+  headsetPlug("android.intent.action.HEADSET_PLUG"),
+  mediaUnmounted("android.intent.action.MEDIA_UNMOUNTED"),
+  mediaMounted("android.intent.action.MEDIA_MOUNTED"),
+  powerSaveModeChanged("android.os.action.POWER_SAVE_MODE_CHANGED");
+
+  const SystemBroadcast(this.action);
+
+  final String action;
 }
 
 class Intent {

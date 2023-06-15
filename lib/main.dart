@@ -1,8 +1,10 @@
 import 'package:adb_gui/commands/adb.dart';
+import 'package:adb_gui/commands/adb_components.dart';
 import 'package:adb_gui/commands/adb_packages.dart';
 import 'package:adb_gui/widgets/console.dart';
 import 'package:adb_gui/widgets/refresh_button.dart';
-import 'package:adb_gui/widgets/value_command_field.dart';
+import 'package:adb_gui/widgets/command_value_field.dart';
+import 'package:dartx/dartx.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
@@ -80,6 +82,7 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     _intentDataKeyController.dispose();
     _intentDataValueController.dispose();
+    _customBroadcastActionController.dispose();
     super.dispose();
   }
 
@@ -111,7 +114,8 @@ class _HomePageState extends State<HomePage> {
                 _buildPackageCommandButtons(),
                 _buildPackageCommandV2Buttons(),
                 _buildComponentCommandButtons(),
-                _buildComponentCommandV2Buttons()
+                _buildComponentCommandV2Buttons(),
+                _buildComponentCommandV3Buttons()
               ],
             ),
           ),
@@ -179,7 +183,7 @@ class _HomePageState extends State<HomePage> {
               _consoleController.outputStreamConsole(widget._adb.getVersion());
             }),
         _buildDivider(),
-        ValueCommandField(
+        CommandValueField(
           hint: "port",
           buttonText: "Start Adb",
           onPressed: (String text) {
@@ -204,7 +208,7 @@ class _HomePageState extends State<HomePage> {
       padding: const EdgeInsets.only(top: 10),
       child: IntrinsicHeight(
         child: Row(children: [
-          ValueCommandField(
+          CommandValueField(
             width: 160,
             hint: "ip address:[port]",
             buttonText: "Wireless Connect Device",
@@ -213,7 +217,7 @@ class _HomePageState extends State<HomePage> {
             },
           ),
           _buildDivider(),
-          ValueCommandField(
+          CommandValueField(
             width: 100,
             hint: "ip address",
             buttonText: "Wireless Disconnect Device",
@@ -223,7 +227,7 @@ class _HomePageState extends State<HomePage> {
             },
           ),
           _buildDivider(),
-          ValueCommandField(
+          CommandValueField(
             width: 160,
             hint: "ip address:[port]",
             buttonText: "Wireless Pairing Device",
@@ -232,7 +236,7 @@ class _HomePageState extends State<HomePage> {
             },
           ),
           _buildDivider(),
-          ValueCommandField(
+          CommandValueField(
             hint: "port",
             buttonText: "Listen TCP/IP Port",
             onPressed: (String text) {
@@ -278,7 +282,7 @@ class _HomePageState extends State<HomePage> {
                 }),
             Padding(
               padding: const EdgeInsets.only(left: 10),
-              child: ValueCommandField(
+              child: CommandValueField(
                 width: 100,
                 hint: "filter name",
                 buttonText: "List Packages",
@@ -291,7 +295,7 @@ class _HomePageState extends State<HomePage> {
             _buildInstallCommandButton(),
             _buildUninstallPackageButton(),
             _buildDivider(),
-            ValueCommandField(
+            CommandValueField(
               width: 120,
               hint: "package name",
               buttonText: "Clear Data",
@@ -368,7 +372,7 @@ class _HomePageState extends State<HomePage> {
     return Row(
       children: [
         _buildDivider(),
-        ValueCommandField(
+        CommandValueField(
           width: 120,
           hint: "package name",
           buttonText: "Uninstall an App",
@@ -396,7 +400,7 @@ class _HomePageState extends State<HomePage> {
       child: IntrinsicHeight(
         child: Row(
           children: [
-            ValueCommandField(
+            CommandValueField(
               width: 120,
               hint: "package name",
               buttonText: "Show App Details",
@@ -406,7 +410,7 @@ class _HomePageState extends State<HomePage> {
               },
             ),
             _buildDivider(),
-            ValueCommandField(
+            CommandValueField(
               width: 120,
               hint: "package name",
               buttonText: "Show App Path",
@@ -437,7 +441,7 @@ class _HomePageState extends State<HomePage> {
                       widget._adb.showForegroundActivity());
                 }),
             _buildDivider(),
-            ValueCommandField(
+            CommandValueField(
               width: 200,
               hint: "package name (optional)",
               buttonText: "Show Running Services",
@@ -465,7 +469,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             _buildDivider(),
-            ValueCommandField(
+            CommandValueField(
               width: 270,
               hint: "<package name>/.<activity name>",
               buttonText: "Start Activity",
@@ -490,7 +494,7 @@ class _HomePageState extends State<HomePage> {
       child: IntrinsicHeight(
         child: Row(
           children: [
-            ValueCommandField(
+            CommandValueField(
               width: 120,
               hint: "package name",
               buttonText: "Start Main Activity",
@@ -502,9 +506,9 @@ class _HomePageState extends State<HomePage> {
               },
             ),
             _buildDivider(),
-            ValueCommandField(
+            CommandValueField(
               controller: _servicePathController,
-              width: 270,
+              width: 280,
               hint: "<package name>/.<service name>",
               buttonText: "Start Service",
               onPressed: (String text) {
@@ -531,6 +535,62 @@ class _HomePageState extends State<HomePage> {
                 _consoleController
                     .outputStreamConsole(widget._adb.startNavigatorBar());
               },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  var _systemBroadcastAction = SystemBroadcast.notApplicable.action;
+  final _customBroadcastActionController = TextEditingController();
+
+  Widget _buildComponentCommandV3Buttons() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            DropdownButton<String>(
+              value: _systemBroadcastAction,
+              hint: const Text('System Broadcast Action'),
+              items: SystemBroadcast.values
+                  .map((e) => DropdownMenuItem<String>(
+                        value: e.action,
+                        child: Text(e.name),
+                      ))
+                  .toList(),
+              onChanged: (String? action) {
+                setState(() {
+                  _systemBroadcastAction =
+                      action ?? SystemBroadcast.notApplicable.action;
+                });
+              },
+            ),
+            Container(
+              width: 220,
+              padding: const EdgeInsets.only(left: 10),
+              child: TextField(
+                controller: _customBroadcastActionController,
+                decoration:
+                    const InputDecoration(hintText: 'Custom Action (optional)'),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 10),
+              child: CommandValueField(
+                width: 370,
+                hint: "<package name>/.<receiver name> (optional)",
+                buttonText: "Send Broadcast",
+                onPressed: (String text) {
+                  _consoleController.outputStreamConsole(widget._adb
+                      .sendBroadcast(
+                          _systemBroadcastAction.isNotEmpty
+                              ? _systemBroadcastAction
+                              : _customBroadcastActionController.text,
+                          receiverPath: text));
+                },
+              ),
             )
           ],
         ),

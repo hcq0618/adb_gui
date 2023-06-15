@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'callbacks.dart';
 
-class ValueCommandField extends StatefulWidget {
+class CommandValueField extends StatefulWidget {
   late final TextEditingController _controller;
   final double width;
   final String hint;
   final String buttonText;
   final TextCallback onPressed;
 
-  ValueCommandField(
+  CommandValueField(
       {super.key,
       TextEditingController? controller,
       this.width = 80,
@@ -19,10 +19,10 @@ class ValueCommandField extends StatefulWidget {
   }
 
   @override
-  State<StatefulWidget> createState() => _ValueCommandFieldState();
+  State<StatefulWidget> createState() => _CommandValueFieldState();
 }
 
-class _ValueCommandFieldState extends State<ValueCommandField> {
+class _CommandValueFieldState extends State<CommandValueField> {
   @override
   void dispose() {
     widget._controller.dispose();
