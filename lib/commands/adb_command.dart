@@ -2,19 +2,34 @@ import 'package:process_run/process_run.dart';
 
 class AdbCommand {
   final Shell shell = Shell();
-  String selectedDevice = "";
+  var selectedDevice = "";
 
   String selectedDeviceParameter() {
     if (selectedDevice.isEmpty) {
       return "";
     } else {
-      return "-s $selectedDevice";
+      return deviceParameter(selectedDevice);
     }
   }
 
-  Stream<String> command(String command) async* {
+  String deviceParameter(String serialNumber) {
+    return "-s $serialNumber";
+  }
+
+  Future<String> commandFuture(String command) async {
+    return await commandFutureFromStream(
+        this.command(command, outputCommand: false));
+  }
+
+  Future<String> commandFutureFromStream(Stream<String> command) async {
+    return await command.firstWhere((element) => true, orElse: () => "");
+  }
+
+  Stream<String> command(String command, {bool outputCommand = true}) async* {
     try {
-      yield "\$$command";
+      if (outputCommand) {
+        yield "\$$command";
+      }
       final output = await shell.run(command);
       final String outputText;
 

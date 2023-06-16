@@ -1,6 +1,7 @@
 import 'package:adb_gui/commands/adb.dart';
-import 'package:adb_gui/commands/adb_components.dart';
+import 'package:adb_gui/commands/adb_devices.dart';
 import 'package:adb_gui/ui/component_command_button_group.dart';
+import 'package:adb_gui/ui/device_command_button_group.dart';
 import 'package:adb_gui/ui/package_command_button_group.dart';
 import 'package:adb_gui/ui/wireless_command_button_group.dart';
 import 'package:adb_gui/widgets/console.dart';
@@ -30,7 +31,7 @@ void main() async {
 
 class AdbGUIApp extends StatelessWidget {
   final Adb adb;
-  final List<String> devices;
+  final List<DeviceInfo> devices;
 
   const AdbGUIApp({super.key, required this.adb, required this.devices});
 
@@ -56,7 +57,8 @@ class HomePage extends StatefulWidget {
   final Adb _adb;
   late List<DropdownMenuItem<String>> _deviceItems;
 
-  HomePage(this._adb, List<String> devices, {super.key, required this.title}) {
+  HomePage(this._adb, List<DeviceInfo> devices,
+      {super.key, required this.title}) {
     _buildDevicesMenu(devices);
   }
 
@@ -65,9 +67,10 @@ class HomePage extends StatefulWidget {
     _buildDevicesMenu(devices);
   }
 
-  _buildDevicesMenu(List<String> devices) {
+  _buildDevicesMenu(List<DeviceInfo> devices) {
     _deviceItems = devices
-        .map((e) => DropdownMenuItem<String>(value: e, child: Text(e)))
+        .map((e) => DropdownMenuItem<String>(
+            value: e.serialNumber, child: Text(e.name)))
         .toList();
   }
 
@@ -102,6 +105,7 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               children: <Widget>[
                 _buildDeviceSelector(),
+                DeviceCommandButtonGroup(widget._adb, _consoleController),
                 WirelessCommandButtonGroup(widget._adb, _consoleController),
                 PackageCommandButtonGroup(widget._adb, _consoleController),
                 ComponentCommandButtonGroup(widget._adb, _consoleController)
@@ -167,9 +171,10 @@ class _HomePageState extends State<HomePage> {
       child: Row(children: [
         _buildDivider(),
         OutlinedButton(
-            child: const Text("Version"),
+            child: const Text("Adb Version"),
             onPressed: () {
-              _consoleController.outputStreamConsole(widget._adb.getVersion());
+              _consoleController
+                  .outputStreamConsole(widget._adb.getAdbVersion());
             }),
         _buildDivider(),
         CommandValueField(
@@ -190,11 +195,13 @@ class _HomePageState extends State<HomePage> {
         ),
         _buildDivider(),
         CommandValueField(
-          hint: "pid",
-          buttonText: "Trim Memory",
+          hint: "key code",
+          buttonText: "Mock Key Event",
+          helpUrl:
+              "https://developer.android.com/reference/android/view/KeyEvent.html",
           onPressed: (String text) {
             _consoleController
-                .outputStreamConsole(widget._adb.trimMemory(text));
+                .outputStreamConsole(widget._adb.mockKeyEvent(text));
           },
         ),
       ]),

@@ -39,6 +39,8 @@ dependencies:
   window_manager: ^0.2.7
   # https://pub.dev/packages/dartx
   dartx: ^1.1.0
+  # https://pub.dev/packages/url_launcher
+  url_launcher: ^6.1.11
 
 dev_dependencies:
   # The "flutter_lints" package below contains a set of recommended lints to

@@ -1,5 +1,7 @@
 import 'package:adb_gui/ui/base_stateful_widget.dart';
+import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../commands/adb_components.dart';
 import '../widgets/command_value_field.dart';
@@ -22,11 +24,14 @@ class _ComponentCommandButtonGroupState
   var _systemBroadcastAction = SystemBroadcast.notApplicable.action;
   final _customBroadcastActionController = TextEditingController();
 
+  final _monkeyTestCountController = TextEditingController(text: "500");
+
   @override
   void dispose() {
     _intentDataKeyController.dispose();
     _intentDataValueController.dispose();
     _customBroadcastActionController.dispose();
+    _monkeyTestCountController.dispose();
     super.dispose();
   }
 
@@ -197,7 +202,27 @@ class _ComponentCommandButtonGroupState
                       receiverPath: text));
                 },
               ),
-            )
+            ),
+            buildDivider(),
+            Container(
+              width: 60,
+              padding: const EdgeInsets.only(right: 10),
+              child: TextField(
+                controller: _monkeyTestCountController,
+                decoration: const InputDecoration(hintText: "test count"),
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              ),
+            ),
+            CommandValueField(
+              width: 130,
+              hint: "package name",
+              buttonText: "Monkey Test",
+              onPressed: (String text) {
+                consoleController.outputStreamConsole(adb.monkeyTest(
+                    text, _monkeyTestCountController.text.toInt()));
+              },
+            ),
           ],
         ),
       ),

@@ -203,6 +203,28 @@ class _PackageCommandButtonGroupState
               onPressed: (String text) {
                 consoleController.outputStreamConsole(adb.forceStopApp(text));
               },
+            ),
+            buildDivider(),
+            OutlinedButton(
+                child: const Text("Show PIDs"),
+                onPressed: () {
+                  consoleController.outputStreamConsole(adb.showPIDs());
+                }),
+            buildDivider(),
+            CommandValueField(
+              hint: "pid",
+              buttonText: "Trim Memory",
+              onPressed: (String text) {
+                consoleController.outputStreamConsole(adb.trimMemory(text));
+              },
+            ),
+            buildDivider(),
+            CommandValueField(
+              hint: "pid",
+              buttonText: "Kill",
+              onPressed: (String text) {
+                consoleController.outputStreamConsole(adb.killPID(text));
+              },
             )
           ],
         ),
