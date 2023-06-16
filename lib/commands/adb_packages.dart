@@ -38,6 +38,16 @@ mixin AdbPackages on AdbCommand {
     yield* command(
         "adb ${selectedDeviceParameter()} shell pm path $packageName");
   }
+
+  Stream<String> forceStopApp(String packageName) async* {
+    yield* command(
+        "adb ${selectedDeviceParameter()} shell am force-stop $packageName");
+  }
+
+  Stream<String> trimMemory(String pid) async* {
+    yield* command(
+        "adb ${selectedDeviceParameter()} shell am send-trim-memory $pid RUNNING_LOW");
+  }
 }
 
 enum ListPackagesParameter {

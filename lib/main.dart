@@ -1,11 +1,11 @@
 import 'package:adb_gui/commands/adb.dart';
 import 'package:adb_gui/commands/adb_components.dart';
-import 'package:adb_gui/commands/adb_packages.dart';
+import 'package:adb_gui/ui/component_command_button_group.dart';
+import 'package:adb_gui/ui/package_command_button_group.dart';
+import 'package:adb_gui/ui/wireless_command_button_group.dart';
 import 'package:adb_gui/widgets/console.dart';
 import 'package:adb_gui/widgets/refresh_button.dart';
 import 'package:adb_gui/widgets/command_value_field.dart';
-import 'package:dartx/dartx.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -78,14 +78,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final _consoleController = ConsoleController();
 
-  @override
-  void dispose() {
-    _intentDataKeyController.dispose();
-    _intentDataValueController.dispose();
-    _customBroadcastActionController.dispose();
-    super.dispose();
-  }
-
   _updateSelectedDevice() {
     if (widget._adb.selectedDevice.isEmpty) {
       if (widget._deviceItems.isNotEmpty) {
@@ -110,12 +102,9 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               children: <Widget>[
                 _buildDeviceSelector(),
-                _buildWirelessCommandButtons(),
-                _buildPackageCommandButtons(),
-                _buildPackageCommandV2Buttons(),
-                _buildComponentCommandButtons(),
-                _buildComponentCommandV2Buttons(),
-                _buildComponentCommandV3Buttons()
+                WirelessCommandButtonGroup(widget._adb, _consoleController),
+                PackageCommandButtonGroup(widget._adb, _consoleController),
+                ComponentCommandButtonGroup(widget._adb, _consoleController)
               ],
             ),
           ),
@@ -199,402 +188,16 @@ class _HomePageState extends State<HomePage> {
                 _consoleController.outputStreamConsole(widget._adb.stopAdb());
               }),
         ),
-      ]),
-    );
-  }
-
-  Widget _buildWirelessCommandButtons() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: IntrinsicHeight(
-        child: Row(children: [
-          CommandValueField(
-            width: 160,
-            hint: "ip address:[port]",
-            buttonText: "Wireless Connect Device",
-            onPressed: (String text) {
-              _consoleController.outputStreamConsole(widget._adb.connect(text));
-            },
-          ),
-          _buildDivider(),
-          CommandValueField(
-            width: 100,
-            hint: "ip address",
-            buttonText: "Wireless Disconnect Device",
-            onPressed: (String text) {
-              _consoleController
-                  .outputStreamConsole(widget._adb.disconnect(text));
-            },
-          ),
-          _buildDivider(),
-          CommandValueField(
-            width: 160,
-            hint: "ip address:[port]",
-            buttonText: "Wireless Pairing Device",
-            onPressed: (String text) {
-              _consoleController.outputStreamConsole(widget._adb.pair(text));
-            },
-          ),
-          _buildDivider(),
-          CommandValueField(
-            hint: "port",
-            buttonText: "Listen TCP/IP Port",
-            onPressed: (String text) {
-              _consoleController.outputStreamConsole(widget._adb.tcpip(text));
-            },
-          ),
-        ]),
-      ),
-    );
-  }
-
-  var _listPackagesParameter = ListPackagesParameter.all.value;
-  final _listPackagesParameters = {
-    ListPackagesParameter.all.value: 'All',
-    ListPackagesParameter.withApk.value: 'With Apk',
-    ListPackagesParameter.withInstaller.value: 'With Installer',
-    ListPackagesParameter.onlyDisabled.value: 'Only Disabled',
-    ListPackagesParameter.onlyEnabled.value: 'Only Enabled',
-    ListPackagesParameter.onlySystem.value: 'Only System',
-    ListPackagesParameter.only3rdParty.value: 'Only 3rd-Party',
-    ListPackagesParameter.includeUninstalled.value: 'Include Uninstalled'
-  };
-
-  Widget _buildPackageCommandButtons() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            DropdownButton<String>(
-                value: _listPackagesParameter,
-                hint: const Text('Parameters'),
-                items: _listPackagesParameters.keys
-                    .map((e) => DropdownMenuItem<String>(
-                        value: e,
-                        child: Text(_listPackagesParameters[e] ?? "")))
-                    .toList(),
-                onChanged: (String? parameter) {
-                  setState(() {
-                    _listPackagesParameter =
-                        parameter ?? ListPackagesParameter.all.value;
-                  });
-                }),
-            Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: CommandValueField(
-                width: 100,
-                hint: "filter name",
-                buttonText: "List Packages",
-                onPressed: (String text) {
-                  _consoleController.outputStreamConsole(widget._adb
-                      .listPackages(_listPackagesParameter, filter: text));
-                },
-              ),
-            ),
-            _buildInstallCommandButton(),
-            _buildUninstallPackageButton(),
-            _buildDivider(),
-            CommandValueField(
-              width: 120,
-              hint: "package name",
-              buttonText: "Clear Data",
-              onPressed: (String text) {
-                _consoleController
-                    .outputStreamConsole(widget._adb.clearData(text));
-              },
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
-  var _installPackageParameter = InstallPackageParameter.normal.value;
-  final _installPackageParameters = {
-    InstallPackageParameter.normal.value: 'Normal',
-    InstallPackageParameter.toProtectedDir.value: 'To Protected Directory',
-    InstallPackageParameter.toSDCard.value: 'To SD Card',
-    InstallPackageParameter.allowOverwrite.value: 'Allow Overwrite',
-    InstallPackageParameter.allowTestOnly.value: 'Allow Test Only',
-    InstallPackageParameter.allowDowngrade.value: 'Allow Downgrade',
-    InstallPackageParameter.grantAllPermissions.value: 'Grant All Permissions',
-    InstallPackageParameter.armeabiV7a.value: 'For armeabi-v7a Only',
-    InstallPackageParameter.arm64V8a.value: 'For arm64-v8a Only',
-    InstallPackageParameter.v86.value: 'For v86 Only',
-    InstallPackageParameter.x86_64.value: 'For x86_64 Only'
-  };
-
-  Widget _buildInstallCommandButton() {
-    return Row(
-      children: [
-        _buildDivider(),
-        DropdownButton<String>(
-            value: _installPackageParameter,
-            hint: const Text('Parameters'),
-            items: _installPackageParameters.keys
-                .map((e) => DropdownMenuItem<String>(
-                    value: e, child: Text(_installPackageParameters[e] ?? "")))
-                .toList(),
-            onChanged: (String? parameter) {
-              setState(() {
-                _installPackageParameter =
-                    parameter ?? InstallPackageParameter.normal.value;
-              });
-            }),
-        Padding(
-          padding: const EdgeInsets.only(left: 10),
-          child: OutlinedButton(
-              child: const Text("Install an Apk"),
-              onPressed: () async {
-                FilePickerResult? result = await FilePicker.platform.pickFiles(
-                  type: FileType.custom,
-                  allowedExtensions: ['apk'],
-                );
-                if (result != null) {
-                  final path = result.files.single.path;
-                  if (path != null) {
-                    _consoleController.outputStreamConsole(widget._adb
-                        .installPackage(_installPackageParameter, path));
-                  }
-                } else {
-                  // User canceled the picker
-                }
-              }),
-        )
-      ],
-    );
-  }
-
-  var _isKeepDataChecked = false;
-
-  Widget _buildUninstallPackageButton() {
-    return Row(
-      children: [
         _buildDivider(),
         CommandValueField(
-          width: 120,
-          hint: "package name",
-          buttonText: "Uninstall an App",
+          hint: "pid",
+          buttonText: "Trim Memory",
           onPressed: (String text) {
-            _consoleController.outputStreamConsole(widget._adb
-                .uninstallPackage(text, keepData: _isKeepDataChecked));
+            _consoleController
+                .outputStreamConsole(widget._adb.trimMemory(text));
           },
         ),
-        Checkbox(
-          value: _isKeepDataChecked,
-          onChanged: (bool? value) {
-            setState(() {
-              _isKeepDataChecked = value!;
-            });
-          },
-        ),
-        const Text("Keep Data")
-      ],
-    );
-  }
-
-  Widget _buildPackageCommandV2Buttons() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            CommandValueField(
-              width: 120,
-              hint: "package name",
-              buttonText: "Show App Details",
-              onPressed: (String text) {
-                _consoleController
-                    .outputStreamConsole(widget._adb.showPackageDetails(text));
-              },
-            ),
-            _buildDivider(),
-            CommandValueField(
-              width: 120,
-              hint: "package name",
-              buttonText: "Show App Path",
-              onPressed: (String text) {
-                _consoleController
-                    .outputStreamConsole(widget._adb.showPackagePath(text));
-              },
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
-  final _intentDataKeyController = TextEditingController();
-  final _intentDataValueController = TextEditingController();
-
-  Widget _buildComponentCommandButtons() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            OutlinedButton(
-                child: const Text("Show Foreground Activity"),
-                onPressed: () {
-                  _consoleController.outputStreamConsole(
-                      widget._adb.showForegroundActivity());
-                }),
-            _buildDivider(),
-            CommandValueField(
-              width: 200,
-              hint: "package name (optional)",
-              buttonText: "Show Running Services",
-              onPressed: (String text) {
-                _consoleController.outputStreamConsole(
-                    widget._adb.showRunningServices(packageName: text));
-              },
-            ),
-            _buildDivider(),
-            Container(
-              width: 180,
-              padding: const EdgeInsets.only(right: 10),
-              child: TextField(
-                controller: _intentDataKeyController,
-                decoration:
-                    const InputDecoration(hintText: "intent extra data key"),
-              ),
-            ),
-            SizedBox(
-              width: 180,
-              child: TextField(
-                controller: _intentDataValueController,
-                decoration:
-                    const InputDecoration(hintText: "intent extra data value"),
-              ),
-            ),
-            _buildDivider(),
-            CommandValueField(
-              width: 270,
-              hint: "<package name>/.<activity name>",
-              buttonText: "Start Activity",
-              onPressed: (String text) {
-                _consoleController.outputStreamConsole(widget._adb
-                    .startActivity(text, extraData: {
-                  _intentDataKeyController.text: _intentDataValueController.text
-                }));
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  final _servicePathController = TextEditingController();
-
-  Widget _buildComponentCommandV2Buttons() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            CommandValueField(
-              width: 120,
-              hint: "package name",
-              buttonText: "Start Main Activity",
-              onPressed: (String text) {
-                _consoleController.outputStreamConsole(widget._adb
-                    .startMainActivity(text, extraData: {
-                  _intentDataKeyController.text: _intentDataValueController.text
-                }));
-              },
-            ),
-            _buildDivider(),
-            CommandValueField(
-              controller: _servicePathController,
-              width: 280,
-              hint: "<package name>/.<service name>",
-              buttonText: "Start Service",
-              onPressed: (String text) {
-                _consoleController.outputStreamConsole(widget._adb
-                    .startService(text, extraData: {
-                  _intentDataKeyController.text: _intentDataValueController.text
-                }));
-              },
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: OutlinedButton(
-                child: const Text("Stop Service"),
-                onPressed: () {
-                  _consoleController.outputStreamConsole(
-                      widget._adb.stopService(_servicePathController.text));
-                },
-              ),
-            ),
-            _buildDivider(),
-            OutlinedButton(
-              child: const Text("Start Navigator Bar"),
-              onPressed: () {
-                _consoleController
-                    .outputStreamConsole(widget._adb.startNavigatorBar());
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  var _systemBroadcastAction = SystemBroadcast.notApplicable.action;
-  final _customBroadcastActionController = TextEditingController();
-
-  Widget _buildComponentCommandV3Buttons() {
-    return Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: IntrinsicHeight(
-        child: Row(
-          children: [
-            DropdownButton<String>(
-              value: _systemBroadcastAction,
-              hint: const Text('System Broadcast Action'),
-              items: SystemBroadcast.values
-                  .map((e) => DropdownMenuItem<String>(
-                        value: e.action,
-                        child: Text(e.name),
-                      ))
-                  .toList(),
-              onChanged: (String? action) {
-                setState(() {
-                  _systemBroadcastAction =
-                      action ?? SystemBroadcast.notApplicable.action;
-                });
-              },
-            ),
-            Container(
-              width: 220,
-              padding: const EdgeInsets.only(left: 10),
-              child: TextField(
-                controller: _customBroadcastActionController,
-                decoration:
-                    const InputDecoration(hintText: 'Custom Action (optional)'),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(left: 10),
-              child: CommandValueField(
-                width: 370,
-                hint: "<package name>/.<receiver name> (optional)",
-                buttonText: "Send Broadcast",
-                onPressed: (String text) {
-                  _consoleController.outputStreamConsole(widget._adb
-                      .sendBroadcast(
-                          _systemBroadcastAction.isNotEmpty
-                              ? _systemBroadcastAction
-                              : _customBroadcastActionController.text,
-                          receiverPath: text));
-                },
-              ),
-            )
-          ],
-        ),
-      ),
+      ]),
     );
   }
 }

@@ -23,24 +23,24 @@ mixin AdbComponents on AdbCommand {
   Stream<String> startActivity(String activityPath,
       {Map<String, String>? extraData}) async* {
     yield* command(
-        "adb shell am start ${Intent(component: activityPath).putMap(extraData).toParameters()}");
+        "adb ${selectedDeviceParameter()} shell am start ${Intent(component: activityPath).putMap(extraData).toParameters()}");
   }
 
   Stream<String> startMainActivity(String packageName,
       {Map<String, String>? extraData}) async* {
     yield* command(
-        "adb shell monkey ${Intent(packageName: packageName, category: 'android.intent.category.LAUNCHER 1').putMap(extraData).toParameters()}");
+        "adb ${selectedDeviceParameter()} shell monkey ${Intent(packageName: packageName, category: 'android.intent.category.LAUNCHER 1').putMap(extraData).toParameters()}");
   }
 
   Stream<String> startService(String servicePath,
       {Map<String, String>? extraData}) async* {
     yield* command(
-        "adb shell am startservice ${Intent(component: servicePath).putMap(extraData).toParameters()}");
+        "adb ${selectedDeviceParameter()} shell am startservice ${Intent(component: servicePath).putMap(extraData).toParameters()}");
   }
 
   Stream<String> stopService(String servicePath) async* {
     yield* command(
-        "adb shell am stopservice ${Intent(component: servicePath).toParameters()}");
+        "adb ${selectedDeviceParameter()} shell am stopservice ${Intent(component: servicePath).toParameters()}");
   }
 
   Stream<String> startNavigatorBar() async* {
@@ -49,7 +49,7 @@ mixin AdbComponents on AdbCommand {
 
   Stream<String> sendBroadcast(String action, {String? receiverPath}) async* {
     yield* command(
-        "adb shell am broadcast ${Intent(action: action, component: receiverPath).toParameters()}");
+        "adb ${selectedDeviceParameter()} shell am broadcast ${Intent(action: action, component: receiverPath).toParameters()}");
   }
 }
 
