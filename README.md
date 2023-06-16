@@ -8,4 +8,4 @@ flutter run -d windows
 ```
 
 # Screenshot
-![](assets/screenshot.jpeg)
+![](assets/screenshot.png)
