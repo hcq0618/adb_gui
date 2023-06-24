@@ -4,6 +4,7 @@ import 'package:adb_gui/ui/component_command_button_group.dart';
 import 'package:adb_gui/ui/device_command_button_group.dart';
 import 'package:adb_gui/ui/package_command_button_group.dart';
 import 'package:adb_gui/ui/wireless_command_button_group.dart';
+import 'package:adb_gui/utils/ui_utils.dart';
 import 'package:adb_gui/widgets/console.dart';
 import 'package:adb_gui/widgets/refresh_button.dart';
 import 'package:adb_gui/widgets/command_value_field.dart';
@@ -118,16 +119,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildDivider() {
-    return const VerticalDivider(
-      width: 30,
-      thickness: 1,
-      indent: 10,
-      endIndent: 10,
-      color: Colors.grey,
-    );
-  }
-
   Widget _buildConsole() {
     return Expanded(
       child: Align(
@@ -169,14 +160,14 @@ class _HomePageState extends State<HomePage> {
   Widget _buildDeviceCommandButtons() {
     return IntrinsicHeight(
       child: Row(children: [
-        _buildDivider(),
+        buildDivider(),
         OutlinedButton(
             child: const Text("Adb Version"),
             onPressed: () {
               _consoleController
                   .outputStreamConsole(widget._adb.getAdbVersion());
             }),
-        _buildDivider(),
+        buildDivider(),
         CommandValueField(
           hint: "port",
           buttonText: "Start Adb",
@@ -193,7 +184,7 @@ class _HomePageState extends State<HomePage> {
                 _consoleController.outputStreamConsole(widget._adb.stopAdb());
               }),
         ),
-        _buildDivider(),
+        buildDivider(),
         CommandValueField(
           hint: "key code",
           buttonText: "Mock Key Event",

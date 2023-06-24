@@ -1,6 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:process_run/process_run.dart';
 
 class AdbCommand {
+  @protected
   final Shell shell = Shell();
   var selectedDevice = "";
 

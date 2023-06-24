@@ -1,18 +1,12 @@
 import 'package:flutter/material.dart';
-
+import '../utils/ui_utils.dart';
 import '../widgets/command_value_field.dart';
-import 'base_stateful_widget.dart';
+import 'base_stateless_widget.dart';
 
-class WirelessCommandButtonGroup extends BaseStatefulWidget {
+class WirelessCommandButtonGroup extends BaseStatelessWidget {
   const WirelessCommandButtonGroup(super.adb, super.consoleController,
       {super.key});
 
-  @override
-  State<StatefulWidget> createState() => _WirelessCommandButtonGroupState();
-}
-
-class _WirelessCommandButtonGroupState
-    extends BaseState<WirelessCommandButtonGroup> {
   @override
   Widget build(BuildContext context) {
     return Padding(

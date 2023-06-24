@@ -1,3 +1,4 @@
+import 'package:adb_gui/ui/disposable_widget.dart';
 import 'package:flutter/material.dart';
 
 class Console extends StatefulWidget {
@@ -9,7 +10,7 @@ class Console extends StatefulWidget {
   State<Console> createState() => _ConsoleState();
 }
 
-class ConsoleController {
+class ConsoleController with DisposableWidget {
   final _consoleOutput = ValueNotifier('');
   final ScrollController _scrollController = ScrollController();
 
@@ -26,7 +27,7 @@ class ConsoleController {
         outputConsole(out);
       },
       cancelOnError: true,
-    );
+    ).canceledBy(this);
   }
 
   void _scrollToEnd() {
@@ -48,6 +49,7 @@ class ConsoleController {
   void _dispose() {
     _consoleOutput.dispose();
     _scrollController.dispose();
+    cancelSubscriptions();
   }
 }
 
